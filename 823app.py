@@ -106,7 +106,7 @@ if session == "Covid Rate in US":
     df_us1 = df[df.Country == "US"]
     df_us1["active"] = df_us1.Confirmed - (df_us1.Deaths + df_us1.Recovered)
     trend = ["All","active","Confirmed", "Deaths"]
-    st.header("Country statistics")
+    st.header("Active,Confirmed, Death Cases in US for Covid19:")
     col = st.selectbox('Which trend in US to look at', trend)
     df_us1 = df_us1.loc[:,["Date","active","Confirmed", "Deaths"]]
     colors = ["steelblue", "red","black","yellow"]
@@ -124,6 +124,11 @@ if session == "Covid Rate in US":
             
         )
     st.altair_chart(c3 , use_container_width=True)
+     with st.beta_expander("See explanation"):
+         st.markdown("""
+         Notice that the Death Rate has stabilized to a fixed rate but it is above zero a lot. We still need to take more actions to reduce mortality. Survive Rate is increasing recently which is a good trend.
+         """)
+    
     
     
     
