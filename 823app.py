@@ -67,6 +67,8 @@ if session == "General Trend":
 if session == "Covid Rate in US":
     url = "https://raw.githubusercontent.com/datasets/covid-19/master/data/countries-aggregated.csv"
     df = pd.read_csv(url)
+    
+    
     df_us = df[df.Country == "US"]
     df_us["infection rate"] = df_us["Confirmed"].diff()
     df_us["death rate"] = 100*df_us["Deaths"].values/df_us["Confirmed"]
@@ -101,28 +103,28 @@ if session == "Covid Rate in US":
          st.markdown("""
          Notice that the Death Rate has stabilized to a fixed rate but it is above zero a lot. We still need to take more actions to reduce mortality. Survive Rate is increasing recently which is a good trend.
          """)
-    
     df_us1 = df[df.Country == "US"]
     df_us1["active"] = df_us1.Confirmed - (df_us1.Deaths + df_us1.Recovered)
     trend = ["All","active","Confirmed", "Deaths"]
-    st.markdown("""# Active,Confirmed, Death Cases in US for Covid19:""")
+    st.header("Country statistics")
     col = st.selectbox('Which trend in US to look at', trend)
     df_us1 = df_us1.loc[:,["Date","active","Confirmed", "Deaths"]]
-    colors = ["steelblue", "red","black"]
+    colors = ["steelblue", "red","black","yellow"]
     SCALE = alt.Scale(domain=trend, range=colors)
     dfu1 = pd.melt(df_us1.reset_index(), id_vars=["Date"], value_vars=["active","Confirmed", "Deaths"])
-    if col == "All":
+    if col == trend[0]:
         dfu1 = dfu1
     else:
-        dfu1 = dfu1[dfu1['variable'].isin(col)]
+        dfu1 = dfu1[dfu1['variable']==col]
     
-    c3 = alt.Chart(df_us1.reset_index()).mark_line().properties(height=400,width = 350).encode(
+    c3 = alt.Chart(dfu1.reset_index()).mark_line().properties(height=400,width = 350).encode(
             x=alt.X("Date:T", title="Date"),
             y=alt.Y("value:Q", title="Cases", scale=alt.Scale(type='linear')),
             color=alt.Color('variable:N', title="Category", scale=SCALE)
             
         )
     st.altair_chart(c3 , use_container_width=True)
+    
     
     
     
