@@ -3,3 +3,6 @@ pip
 pandas
 streamlit
 altair
+numpy
+plotly
+datetime
