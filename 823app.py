@@ -124,7 +124,7 @@ if session == "Covid Rate in US":
             
         )
     st.altair_chart(c3 , use_container_width=True)
-     with st.beta_expander("See explanation"):
+    with st.beta_expander("See explanation"):
          st.markdown("""
          Notice that the Death Rate has stabilized to a fixed rate but it is above zero a lot. We still need to take more actions to reduce mortality. Survive Rate is increasing recently which is a good trend.
          """)
