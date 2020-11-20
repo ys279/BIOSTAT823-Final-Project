@@ -8,12 +8,15 @@ import plotly.express as px
 from datetime import timedelta, datetime
 
 
+
 session = st.sidebar.selectbox("Which session to Look at?", ["General Trend", "Map", "Covid Rate in US"])
+
 st.title('🦠 Covid19 Visualization')
 
 if session == "General Trend":
     url = "https://raw.githubusercontent.com/datasets/covid-19/master/data/countries-aggregated.csv"
     df = pd.read_csv(url)
+
     maxr = []
     countrys = list(df.Country.unique())
     for i in countrys:
@@ -26,6 +29,12 @@ if session == "General Trend":
    
 #sidebar
     st.sidebar.subheader("General death,recover and confirmed cases trend for Covid19")
+
+    s2 = st.sidebar.selectbox(
+            "Choose cases or rate",
+             ["cases","rate"]
+        )
+
     st.header("Country statistics")
     st.markdown("""\
             The reported number of confirmed, recovered and dead COVID-19 cases by countries that have top10 highest max infection rate.
@@ -47,7 +56,9 @@ if session == "General Trend":
                      alt.Tooltip('inhabitants:Q', title='Inhabitants [mio]')]
                      )
     st.altair_chart(c1, use_container_width=True)
-    selection = st.selectbox("which country to look at:", country)
+
+    selection = st.selectbox("Which country to look at:", country)
+
     df = df[df["Country"] == selection]
     variables = ["Confirmed","Recovered", "Deaths"]
     colors = ["steelblue", "orange", "black"]
@@ -58,16 +69,34 @@ if session == "General Trend":
             {val: i for i, val in enumerate(variables[::-1])}
         )
 
-    c = alt.Chart(dfm.reset_index()).mark_bar().properties(height=400,width = 350).encode(
+    if s2 == "cases":
+        c = alt.Chart(dfm.reset_index()).mark_bar().properties(height=400,width = 350).encode(
+
             x=alt.X("Date:T", title="Date"),
             y=alt.Y("sum(value):Q", title="Cases", scale=alt.Scale(type='linear')),
             color=alt.Color('variable:N', title="Category", scale=SCALE), 
             order='order'
         )
    
-    st.altair_chart(c , use_container_width=True)
 
-if session == "Covid Rate in US":
+        st.altair_chart(c , use_container_width=True)
+    else:
+        df["Infection Rate"] = df.Confirmed.diff()
+        df["Incident Rate"] = df.Confirmed/1000
+        df = df.loc[:,["Date","Infection Rate","Incident Rate"]]
+        dfr = pd.melt(df.reset_index(), id_vars=["Date"], value_vars=["Infection Rate","Incident Rate"])
+        SCALE = alt.Scale(domain= ["Infection Rate","Incident Rate"], range= ["steelblue", "orange"])
+        c_r = alt.Chart(dfr.reset_index()).mark_line().properties(height=400,width = 350).encode(
+            x=alt.X("Date:T", title="Date"),
+            y=alt.Y("value:Q", title="Rate", scale=alt.Scale(type='linear')),
+            color=alt.Color('variable:N', title="Category", scale=SCALE)
+        )
+   
+        st.altair_chart(c_r , use_container_width=True)
+        
+
+if session == "Covid19 in US":
+
     url = "https://raw.githubusercontent.com/datasets/covid-19/master/data/countries-aggregated.csv"
     df = pd.read_csv(url)
     
@@ -108,17 +137,17 @@ if session == "Covid Rate in US":
          """)
     df_us1 = df[df.Country == "US"]
     df_us1["active"] = df_us1.Confirmed - (df_us1.Deaths + df_us1.Recovered)
-    trend = ["All","active","Confirmed", "Deaths"]
-    st.header("Active,Confirmed, Death Cases in US for Covid19:")
-    col = st.selectbox('Which trend in US to look at', trend)
+
+    trend = ["active","Confirmed", "Deaths"]
+    st.sidebar.subheader("Active,Confirmed, Death Cases in US for Covid19:")
+    col = st.sidebar.multiselect('Which Cases in US to look at', trend, 
+                              default = trend)
     df_us1 = df_us1.loc[:,["Date","active","Confirmed", "Deaths"]]
-    colors = ["steelblue", "red","black","yellow"]
+    colors = ["steelblue", "red","black"]
     SCALE = alt.Scale(domain=trend, range=colors)
     dfu1 = pd.melt(df_us1.reset_index(), id_vars=["Date"], value_vars=["active","Confirmed", "Deaths"])
-    if col == trend[0]:
-        dfu1 = dfu1
-    else:
-        dfu1 = dfu1[dfu1['variable']==col]
+    dfu1 = dfu1[dfu1['variable'].isin(col)]
+
     
     c3 = alt.Chart(dfu1.reset_index()).mark_line().properties(height=400,width = 350).encode(
             x=alt.X("Date:T", title="Date"),
@@ -129,10 +158,11 @@ if session == "Covid Rate in US":
     st.altair_chart(c3 , use_container_width=True)
     with st.beta_expander("See explanation"):
          st.markdown("""
-         Notice that the Death Rate has stabilized to a fixed rate but it is above zero a lot. We still need to take more actions to reduce mortality. Survive Rate is increasing recently which is a good trend.
+
+         Notice that in US, the confirmed cases is extremly high which need us to make more attention to this.Though the death cases is not very high, the active cases is still a lot which means it is hard to fully recovered.
          """)
-    
-    
+
+
 if session == "Map":
     st.sidebar.subheader("Pick A Map")
     mapplots = st.sidebar.selectbox("Maps", ["Daily updated","Spread of COVID-19"])
@@ -225,7 +255,9 @@ if session == "Map":
             st.sidebar.subheader("Which information you would like to know:")
             active = st.sidebar.checkbox("Active", value = True)
             death = st.sidebar.checkbox("Death", value = True)
-            
+
+            daily_us = 'https://raw.githubusercontent.com/CSSEGISandData/COVID-19/master/csse_covid_19_data/csse_covid_19_daily_reports_us/{}.csv'.format(today)
+
             us_df = read_daily_data(daily_us)
             date, time = us_df.iloc[0,2].split()
             if active:

@@ -7,11 +7,13 @@ import plotly.graph_objects as go
 import plotly.express as px
 from datetime import timedelta, datetime,date
 
+
 session = st.sidebar.selectbox("Which session to Look at?", [ "Map", "General Trend","Covid19 in US"])
 st.title('🦠 Covid19 Visualization')
 
 if session == "General Trend":
     #st.video('https://youtu.be/ST-cn2JQ31M')
+
     url = "https://raw.githubusercontent.com/datasets/covid-19/master/data/countries-aggregated.csv"
     df = pd.read_csv(url)
     
@@ -195,14 +197,17 @@ if session == "Map":
             return (full_table['Date_datetype'] > start_date) & (full_table['Date_datetype']<end_date)
         #default graph
         
+
         st.sidebar.subheader("Choose a Date Range:")
         st.sidebar.markdown("""Date must be in format YYYY-MM-DD""")
+
         start_date = st.sidebar.text_input('Start date (no late than 2020/1/22)',"2020-03-22")
         end_date = st.sidebar.text_input('End date', "2020-05-03")
         
-   
+
         st.markdown("""#### *check the box only after you have both Start and End Date*""")
         if st.checkbox("Show me the spread ", value=True):
+
             mask = date_range(start_date, end_date)
             animate = px.scatter_mapbox(full_table[mask],lat="Lat", lon="Long",
                                         animation_frame = 'Date', animation_group = 'Country/Region',
@@ -213,7 +218,7 @@ if session == "Map":
                                         title = 'Spread of COVID-19 from {start} to {end}'.format(start = start_date, end = end_date)
                                        )
             animate.update_layout(autosize = False, height = 600, width = 800)
-            
+
         
             st.plotly_chart(animate)
      
@@ -247,10 +252,12 @@ if session == "Map":
                                         color_continuous_scale=px.colors.sequential.Jet, 
                                         size_max=40, zoom=0.8,center={"lat": 26.978, "lon": -10.249},
                                         hover_data=['Confirmed', 'Deaths', 'Recovered'],hover_name='Regions'
+
                                        )
                 g_f.update_layout(title=f'COVID-19 Global Active cases by country. Date: {date}',
                                   autosize = False, height = 550, width = 800
                                  )
+
                 g_f.data[0].update(hovertemplate='<b>%{hovertext}</b><br><br>Active=%{marker.color}<br>Confirmed=%{customdata[0]}<br>Deaths=%{customdata[1]}<br>Recovered=%{customdata[2]}<extra></extra>')
                 st.plotly_chart(g_f)
             if ratio:
@@ -261,6 +268,7 @@ if session == "Map":
                 us_df = pd.read_csv(daily_us)
                 us_df["Case-Fatality Ratio"] = round((us_df["Deaths"]/(us_df["Confirmed"]+us_df["Recovered"]))*100, 2)
                 us_df["Case-Fatality Ratio"] = us_df["Case-Fatality Ratio"].fillna(0)
+
                 for state in us_df.Province_State:
                     g_df["Lat"] = np.where((g_df.Province_State == state),us_df[us_df["Province_State"] == state].Lat.values,g_df['Lat'])
                     g_df["Long_"] = np.where((g_df.Province_State == state),us_df[us_df["Province_State"] == state].Long_.values,g_df['Long_'])
@@ -268,14 +276,17 @@ if session == "Map":
                 g_df = g_df.drop("Case_Fatality_Ratio", axis = 1)
                 
                 r_f = px.scatter_mapbox(g_df, lat="Lat", lon="Long_",     
+
                                         color="Case-Fatality Ratio", zoom=0.8, 
                                         size = g_df["Case-Fatality Ratio"].astype(int),
                                         size_max = 10,
+
                                         center={"lat": 26.978, "lon": -10.249},
                                         hover_data=["Case-Fatality Ratio"],hover_name='Regions')
                 r_f.update_layout(title=f'COVID-19 Global Case-Fatality Rate by country. Date: {date}',
                                   autosize = False, height = 550, width = 800
                                  )
+
                 r_f.data[0].update(hovertemplate= '<b>%{hovertext}</b><br>Case-Fatality Ratio=%{marker.color}<extra></extra>')
                 with st.beta_expander("What is Case-Fatality Ratio?"):
                     st.markdown("""
@@ -299,11 +310,13 @@ if session == "Map":
                                         size_max=40,
                                         zoom=2.94, 
                                         center={"lat": 38.5266, "lon": -96.72},              
+
                                         hover_data=["Confirmed", "Deaths", "Recovered"],
                                         hover_name='Province_State')
                 a_f.update_layout(title=f'COVID-19 US Active cases by state. Date: {date}',
                                  autosize = False, height = 500, width = 800)
                 a_f.data[0].update(hovertemplate='<b>%{hovertext}</b><br><br>Active=%{marker.color}<br>Confirmed=%{customdata[0]}<br>Deaths=%{customdata[1]}<br>Recovered=%{customdata[2]}<extra></extra>')
+
                 st.plotly_chart(a_f)
             if death:
                 us_state_abbrev = {
